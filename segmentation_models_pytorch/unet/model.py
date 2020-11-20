@@ -1,3 +1,4 @@
+import torch.nn as nn
 from typing import Optional, Union, List
 from .decoder import UnetDecoder
 from ..encoders import get_encoder
@@ -72,16 +73,23 @@ class Unet(SegmentationModel):
             attention_type=decoder_attention_type,
         )
 
-        self.segmentation_head = SegmentationHead(
-            in_channels=decoder_channels[-1],
-            out_channels=classes,
-            activation=activation,
-            kernel_size=3,
+        # self.segmentation_head = SegmentationHead(
+        #     in_channels=decoder_channels[-1],
+        #     out_channels=classes,
+        #     activation=activation,
+        #     kernel_size=3,
+        # )
+
+        self.detector_head = nn.Conv2d(in_channels=decoder_channels[1], out_channels=1, kernel_size=1)
+
+        self.skip_connection = nn.Sequential(
+            nn.Sigmoid(),
+            nn.MaxPool2d(kernel_size=4)
         )
 
         if aux_params is not None:
             self.classification_head = ClassificationHead(
-                in_channels=self.encoder.out_channels[-1], **aux_params
+                self.encoder.out_channels[-1], **aux_params
             )
         else:
             self.classification_head = None

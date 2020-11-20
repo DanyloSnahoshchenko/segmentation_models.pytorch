@@ -37,6 +37,7 @@ class MobileNetV2Encoder(torchvision.models.MobileNetV2, EncoderMixin):
         self._out_channels = out_channels
         self._in_channels = 3
         del self.classifier
+        del self.features[11:]
 
     def get_stages(self):
         return [
@@ -44,8 +45,8 @@ class MobileNetV2Encoder(torchvision.models.MobileNetV2, EncoderMixin):
             self.features[:2],
             self.features[2:4],
             self.features[4:7],
-            self.features[7:14],
-            self.features[14:],
+            self.features[7:11],
+            # self.features[14:],
         ]
 
     def forward(self, x):
@@ -61,7 +62,7 @@ class MobileNetV2Encoder(torchvision.models.MobileNetV2, EncoderMixin):
     def load_state_dict(self, state_dict, **kwargs):
         state_dict.pop("classifier.1.bias")
         state_dict.pop("classifier.1.weight")
-        super().load_state_dict(state_dict, **kwargs)
+        super().load_state_dict(state_dict, **kwargs, strict=False)
 
 
 mobilenet_encoders = {
@@ -77,7 +78,7 @@ mobilenet_encoders = {
             },
         },
         "params": {
-            "out_channels": (3, 16, 24, 32, 96, 1280),
+            "out_channels": (3, 16, 24, 32, 64, 1280),
         },
     },
 }

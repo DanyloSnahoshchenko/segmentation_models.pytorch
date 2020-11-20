@@ -97,6 +97,9 @@ class UnetDecoder(nn.Module):
         else:
             self.center = nn.Identity()
 
+        # use only first decoder block
+        in_channels, skip_channels, out_channels = in_channels[:2], skip_channels[:2], out_channels[:2]
+
         # combine decoder keyword arguments
         kwargs = dict(use_batchnorm=use_batchnorm, attention_type=attention_type)
         blocks = [
@@ -104,6 +107,7 @@ class UnetDecoder(nn.Module):
             for in_ch, skip_ch, out_ch in zip(in_channels, skip_channels, out_channels)
         ]
         self.blocks = nn.ModuleList(blocks)
+
 
     def forward(self, *features):
 
@@ -114,8 +118,11 @@ class UnetDecoder(nn.Module):
         skips = features[1:]
 
         x = self.center(head)
+
+        decoder_features = []
         for i, decoder_block in enumerate(self.blocks):
             skip = skips[i] if i < len(skips) else None
             x = decoder_block(x, skip)
+            decoder_features.append(x)
 
-        return x
+        return decoder_features
